@@ -23,6 +23,8 @@ autoCropper(image_dir, crop_dir, file_dictionary)
 
 ```
 (This is just one image)
+
+
 ![](image_dir/RSIP_Example_HipSegmentation.jpg)
 
 ## Example Output Images:

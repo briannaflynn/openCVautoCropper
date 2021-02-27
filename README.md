@@ -10,7 +10,7 @@ Requirements:
 
 ________
 
-## input image:
+## Example Input Image:
 
 ![](image_dir/RSIP_Example_HipSegmentation.jpg)
 

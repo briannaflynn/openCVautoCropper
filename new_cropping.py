@@ -1,4 +1,4 @@
-#ipmorting libraries
+#importing libraries
 import cv2 as cv
 from PIL import Image
 import numpy as np
@@ -9,9 +9,41 @@ import json
 x = [20, 20, 40, 40]
 y = [20, 40, 40, 20]
 
+#given a filename and vgg formattted json file path from makesense.ai or other image annotation software,
+#this function iterates through the json file and returns the x and y coordinates as lists
+def coordinates_from_json(filename, json_path):
+    file = open(json_path)
+    data = json.load(file)
+    file.close() #we now have the json object as a python dictionary
+    x_list = data[filename]['regions']['0']['shape_attributes']['all_points_x']
+    y_list = data[filename]['regions']['0']['shape_attributes']['all_points_y']
+    return x_list, y_list
+
+"""#the following is stack overflow code to make a matrix of a bunch of zeroes and
+#a square of ones which we designated by the two lists above
+contours = np.stack((x, y), axis = 1)
+polygon = np.array([contours], dtype = np.int32)
+zero_mask = np.zeros((100, 100), np.uint8)
+polyMask = cv.fillPoly(zero_mask, polygon, 1)"""
+
+#the following function takes a filename of an image, a json object containing coordinate information,
+#and a directory (str) in which to store the resulting output, the mask
+def mask_from_file(filename, json_path, mask_dir):
+    x_list, y_list = coordinates_from_json(filename, json_path)
+    image = Image.open(filename)
+    shape = image.size
+    image.close()
+    contours = np.stack((x_list, y_list), axis = 1)
+    polygon = np.array([contours], dtype = np.int32)
+    zero_mask = np.zeros((shape[0], shape[1]), np.uint8)
+    polyMask = cv.fillPoly(zero_mask, polygon, 1)
+    cv.imwrite(mask_dir + '/' + filename[:-4] + '_mask.png', polyMask)
+
+mask_from_file('S12676_Before_V1.jpg', 'petrous_bones_kushal_annotations.json', 'mask_dir')
 
 
 """#a dictionary of the start and end coordinates
+#a dictionary of the start and end coordinates
 coordinates = dict()
 first_one = False
 
@@ -43,7 +75,7 @@ The new code starts here onwards that would crop the images
 #returns the number of ones in the column, and the starting and ending index of the ones in the column
 def num_ones_in_col(matrix, col_index):
     num_ones = 0
-    first_one = FALSE
+    first_one = False
     start_col_index = 0
     end_col_index = 0
     #the integer i represents the number of rows
@@ -51,7 +83,7 @@ def num_ones_in_col(matrix, col_index):
     #column col_index to find the number of ones
     #in the column
     for i in range(len(matrix)):
-        if(matrix[i][col_index] == 1 and first_one == FALSE):
+        if(matrix[i][col_index] == 1 and first_one == False):
             num_ones += 1
             start_col_index = i
             end_col_index = i #we include this line because of the edge case that there is only one number one in a column
@@ -65,7 +97,7 @@ def num_ones_in_col(matrix, col_index):
 #returns the number of ones in the row, and the starting and ending index of the ones in the row
 def num_ones_in_row(matrix, row_index):
     num_ones = 0
-    first_one = FALSE
+    first_one = False
     start_row_index = 0
     end_row_index = 0
     #the integer j represents the number of columns
@@ -121,7 +153,7 @@ def centroid_finder(matrix):
 #given the filepath of an image (in .jpg) and its corresponding mask of ones and zeros,
 #this function crops and stores the image in the same directory
 #where n is half the length of the desired width and height
-def cropper(img_path, matrix, n):
+def cropper(img_path, matrix, n, extension = ".jpg"):
 
     img = cv.imread(img_path)
 
@@ -133,7 +165,7 @@ def cropper(img_path, matrix, n):
     top_bound = center_y - n if (center_y - n) >= 0 else 0
 
     cropped_img = img[left_bound:right_bound, top_bound:bottom_bound]
-    cropped_path = img_path[0:(len(img_path) - 4)] + "_cropped.jpg"
+    cropped_path = img_path[0:(len(img_path) - 4)] + "_cropped" + extension
 
     cv.imwrite(cropped_path, cropped_img)
 

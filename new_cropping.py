@@ -2,20 +2,16 @@
 import cv2 as cv
 from PIL import Image
 import numpy as np
+import json
 
 #example coordinates of a square
 #top left, bottom left, bottom right, top right
 x = [20, 20, 40, 40]
 y = [20, 40, 40, 20]
 
-#the following is stack overflow code to make a matrix of a bunch of zeroes and
-#a square of ones which we designated by the two lists above
-contours = np.stack((x, y), axis = 1)
-polygon = np.array([contours], dtype = np.int32)
-zero_mask = np.zeros((100, 100), np.uint8)
-polyMask = cv.fillPoly(zero_mask, polygon, 1)
 
-#a dictionary of the start and end coordinates
+
+"""#a dictionary of the start and end coordinates
 coordinates = dict()
 first_one = False
 
@@ -38,7 +34,7 @@ for i in range(len(polyMask)):
 
 
 #print(polyMask)
-#cv.imwrite("newimage.png", polyMask)
+#cv.imwrite("newimage.png", polyMask)"""
 
 """
 The new code starts here onwards that would crop the images

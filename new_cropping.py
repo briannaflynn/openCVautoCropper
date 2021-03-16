@@ -3,6 +3,7 @@ import cv2 as cv
 from PIL import Image
 import numpy as np
 import json
+import os
 
 #example coordinates of a square
 #top left, bottom left, bottom right, top right
@@ -28,18 +29,22 @@ polyMask = cv.fillPoly(zero_mask, polygon, 1)"""
 
 #the following function takes a filename of an image, a json object containing coordinate information,
 #and a directory (str) in which to store the resulting output, the mask
-def mask_from_file(filename, json_path, mask_dir):
+def mask_from_file(image_dir, filename, json_path, mask_dir):
     x_list, y_list = coordinates_from_json(filename, json_path)
-    image = Image.open(filename)
+    path = os.path.abspath(image_dir + '/' + filename)
+    image = Image.open(path)
     shape = image.size
+    print(shape)
     image.close()
     contours = np.stack((x_list, y_list), axis = 1)
     polygon = np.array([contours], dtype = np.int32)
-    zero_mask = np.zeros((shape[0], shape[1]), np.uint8)
+    zero_mask = np.zeros((shape[1], shape[0]), np.uint8)
     polyMask = cv.fillPoly(zero_mask, polygon, 1)
     cv.imwrite(mask_dir + '/' + filename[:-4] + '_mask.png', polyMask)
+    return polyMask
 
-mask_from_file('S12676_Before_V1.jpg', 'petrous_bones_kushal_annotations.json', 'mask_dir')
+matrix = mask_from_file('image_dir', 'S12676_Before_V1.jpg', 'petrous_bones_kushal_annotations.json', 'mask_dir')
+#print(matrix)
 
 
 """#a dictionary of the start and end coordinates
@@ -82,7 +87,7 @@ def num_ones_in_col(matrix, col_index):
     #we're gonna go through the different rows of
     #column col_index to find the number of ones
     #in the column
-    for i in range(len(matrix)):
+    for i in range(len(matrix) - 1):
         if(matrix[i][col_index] == 1 and first_one == False):
             num_ones += 1
             start_col_index = i
@@ -104,6 +109,7 @@ def num_ones_in_row(matrix, row_index):
     #we're gonna go through the different columns
     #row row_index to find the number of ones
     #in the row
+    print(matrix[row_index])
     for j in range(len(matrix[row_index])):
         if(matrix[row_index][j] == 1 and first_one == False):
             first_one == True
@@ -114,6 +120,8 @@ def num_ones_in_row(matrix, row_index):
             end_row_index = j
             num_ones += 1
     return num_ones, start_row_index, end_row_index
+print(len(matrix))
+
 
 #this function gives us the start and end indicies of the column with the most amount of ones
 #for a 2d matrix (matrix) of ones and zeros
@@ -136,7 +144,7 @@ def loc_max_ones_row(matrix):
     for j in range(len(matrix[0])):
         current, _, _ = num_ones_in_row(matrix, j)
         if(current > max_num_ones):
-            max_num_ones, max_start_row_index, max_end_row_index = num_ones_in_row(matrix, i)
+            max_num_ones, max_start_row_index, max_end_row_index = num_ones_in_row(matrix, j)
     return max_start_row_index, max_end_row_index
 
 #given a matrix of ones and zeros, finds the coordinates of the 
@@ -153,9 +161,10 @@ def centroid_finder(matrix):
 #given the filepath of an image (in .jpg) and its corresponding mask of ones and zeros,
 #this function crops and stores the image in the same directory
 #where n is half the length of the desired width and height
-def cropper(img_path, matrix, n, extension = ".jpg"):
+def cropper(image_dir, filename, matrix, n, extension = ".jpg"):
 
-    img = cv.imread(img_path)
+    path = os.path.abspath(image_dir + '/' + filename)
+    img = cv.imread(path)
 
     center_x, center_y = centroid_finder(matrix)
 
@@ -168,5 +177,7 @@ def cropper(img_path, matrix, n, extension = ".jpg"):
     cropped_path = img_path[0:(len(img_path) - 4)] + "_cropped" + extension
 
     cv.imwrite(cropped_path, cropped_img)
+
+#cropper('image_dir', 'S12676_Before_V1.jpg', mask_from_file('image_dir', 'S12676_Before_V1.jpg', 'petrous_bones_kushal_annotations.json', 'mask_dir'), 100)
 
 

@@ -18,7 +18,7 @@ def coordinates_from_json(filename, json_path):
 
 #the following function takes a filename of an image, a json object containing coordinate information,
 #and a directory (str) in which to store the resulting output, the mask
-def mask_from_file(image_dir, filename, json_path, mask_dir):
+def mask_from_file(image_dir, filename, json_path, mask_dir, n=1):
     x_list, y_list = coordinates_from_json(filename, json_path)
     path = os.path.abspath(image_dir + '/' + filename)
     image = Image.open(path)
@@ -28,10 +28,93 @@ def mask_from_file(image_dir, filename, json_path, mask_dir):
     contours = np.stack((x_list, y_list), axis = 1)
     polygon = np.array([contours], dtype = np.int32)
     zero_mask = np.zeros((shape[1], shape[0]), np.uint8)
-    polyMask = cv.fillPoly(zero_mask, polygon, 1)
+    polyMask = cv.fillPoly(zero_mask, polygon, n)
     cv.imwrite(mask_dir + '/' + filename[:-4] + '_mask.png', polyMask)
     return polyMask
 
+
+def get_coordinates(matrix):
+	
+	coordinates = dict()
+	first_one = False
+	
+	for i in range(len(matrix)):
+		for j in range(len(matrix[i])):
+		
+			if matrix[i][j] == 1 and first_one == False:
+				coordinates['start'] = (i, j)
+				first_one = True
+			
+			if matrix[i][j] == 1 and first_one == True:
+				coordinates['end'] = (i, j) # i = row, j = column
+			
+	
+	return coordinates
+
+
+def simpleCentroid(matrix, start_end_coordinate_dict = None):
+	
+	def coordinates2centroid(coordinates):
+		
+		coords = dict()
+		y = None
+		x = None
+		
+		if coordinates['end'][0] > coordinates['start'][0]:
+			y = coordinates['end'][0] - coordinates['start'][0]
+			coords['y'] = coordinates['start'][0]
+		elif coordinates['end'][0] < coordinates['start'][0]:
+			y = coordinates['start'][0] - coordinates['end'][0]
+			coords['y'] = coordinates['end'][0]
+			
+		if coordinates['end'][1] > coordinates['start'][1]:
+			x = coordinates['end'][1] - coordinates['start'][1]
+			coords['x'] = coordinates['start'][1]
+		elif coordinates['end'][1] < coordinates['start'][1]:
+			x = coordinates['start'][1] - coordinates['end'][1]
+			coords['x'] = coordinates['end'][1]
+			
+		midy = y // 2
+		midx = x // 2
+		
+		y = coords['y'] + midy
+		x = coords['x'] + midx
+		
+		return ({'x': x, 'y': y})
+	
+	coords = None
+	start_end_positions = None	
+	if coordinates != None:
+		coords = coordinates2centroid(start_end_coordinate_dict)
+	elif coordinates == None:
+		start_end_positions = get_coordinates(matrix)
+		coords = coordinates2centroid(start_end_positions)
+			
+	return coords
+		
+	
+#given the filepath of an image (in .jpg) and its corresponding mask of ones and zeros,
+#this function crops and stores the image in the same directory
+#where n is half the length of the desired width and height
+def cropper(image_dir, filename, matrix, x, y, n, extension = ".jpg"):
+
+    path = os.path.abspath(image_dir + '/' + filename)
+    img = cv.imread(path)
+
+    center_x, center_y = x, y
+
+    left_bound = center_x - n // 2 if (center_x - n // 2) >= 0 else 0
+    right_bound = center_x + n //2 if (center_x + n) < len(matrix[0]) else (len(matrix[0]) - 1)
+    bottom_bound = center_y + n //2 if (center_y + n) < len(matrix) else len(matrix) - 1
+    top_bound = center_y - n // 2 if (center_y - n) >= 0 else 0
+
+    cropped_img = img[top_bound:bottom_bound, left_bound:right_bound]
+    cropped_path = path[0:(len(path) - 4)] + "_cropped" + extension
+
+    cv.imwrite(cropped_path, cropped_img)
+
+
+'''
 #given a 2D matrix of zeroes and ones (matrix) and a column index from 0-(Len(matrix) - 1) (col_index),
 #returns the number of ones in the column, and the starting and ending index of the ones in the column
 def num_ones_in_col(matrix):
@@ -44,7 +127,7 @@ def num_ones_in_col(matrix):
     #we're gonna go through the different rows of
     #column col_index to find the number of ones
     #in the column
-    for i in range(len(matrix)):
+    for i in range(col_index):
         if(matrix[i][col_index] == 1 and first_one == False):
             num_ones += 1
             start_col_index = i
@@ -55,6 +138,7 @@ def num_ones_in_col(matrix):
             end_col_index = i
     
     return num_ones, start_col_index, end_col_index
+
 
 #given a 2D matrix of zeroes and ones (matrix) and a row index from 0-(Len(matrix) - 1) (row_index),
 #returns the number of ones in the row, and the starting and ending index of the ones in the row
@@ -108,34 +192,17 @@ def loc_max_ones_row(matrix):
     
     return max_start_row_index, max_end_row_index
 
+
+
 #given a matrix of ones and zeros, finds the coordinates of the 
 #center of ones in the matrix
 def centroid_finder(matrix):
     row_start, row_end = loc_max_ones_row(matrix)
-    col_start, col_end = loc_max_ones_col(matrix)
+    col_start, col_end = loc_max_fones_col(matrix)
 
     centroid_x = (row_start + row_end) // 2
     centroid_y = (col_start + col_end) // 2
 
     return centroid_x, centroid_y
 
-#given the filepath of an image (in .jpg) and its corresponding mask of ones and zeros,
-#this function crops and stores the image in the same directory
-#where n is half the length of the desired width and height
-def cropper(image_dir, filename, matrix, n, extension = ".jpg"):
-
-    path = os.path.abspath(image_dir + '/' + filename)
-    img = cv.imread(path)
-
-    center_x, center_y = centroid_finder(matrix)
-
-    left_bound = center_x - n if (center_x - n) >= 0 else 0
-    right_bound = center_x + n if (center_x + n) < len(matrix[0]) else (len(matrix[0]) - 1)
-    bottom_bound = center_y + n if (center_y + n) < len(matrix) else len(matrix) - 1
-    top_bound = center_y - n if (center_y - n) >= 0 else 0
-
-    cropped_img = img[left_bound:right_bound, top_bound:bottom_bound]
-    cropped_path = path[0:(len(path) - 4)] + "_cropped" + extension
-
-    cv.imwrite(cropped_path, cropped_img)
-
+'''

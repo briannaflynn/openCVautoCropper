@@ -5,26 +5,21 @@ from PIL import Image
 from tqdm import tqdm 
 import os
 
-def make_test():
-	#example coordinates of a square
-#top left, bottom left, bottom right, top right
-	x = [20, 20, 40, 40]
-	y = [20, 40, 40, 20]
+def make_test(m, n, a, b):
+	
+	x = [a, a, b, b]
+	y = [a, b, b, a]
 
-#the following is stack overflow code to make a matrix of a bunch of zeroes and
-#a square of ones which we designated by the two lists above
 	contours = np.stack((x, y), axis = 1)
 	polygon = np.array([contours], dtype = np.int32)
-	zero_mask = np.zeros((1000, 1000), np.uint8)
+	zero_mask = np.zeros((m, n), np.uint8)
 	polyMask = cv.fillPoly(zero_mask, polygon, 255)
 	
 	return polyMask
 	
-matrix = make_test()
-cv.imwrite("cropping_test.png", polyMask)
-
-n = 150
-cropper("./cropping_test.png", matrix, n, extension = ".png")
+# height, width
+# example:
+# matrix = make_test(850, 1000, 200, 400)
 
 def assert_dimensions(output_img, n):
 	
@@ -32,16 +27,32 @@ def assert_dimensions(output_img, n):
 	image = Image.open(img_path)
 	shape = image.size
 	image.close()
-	size_right = None
+	size_right = False
 	if shape[0] == n and shape[1] == n:
 		size_right = True
 		
 		print("Success: Output file", output_img, "has the correct dimensions")
 		
-	elif size_right == None:
+	elif size_right == False:
 		print("Error: Output file", output_img, "has incorrect dimensions")
 		
-	
+# example demo
 
-	
-assert_dimensions("cropping_test_cropped.png", n)
+file = "S8840_Before_V1.jpg"
+cropped_file = file[:-4] + "_cropped.jpg"
+cd = "."
+n = 1200 
+
+petrous = mask_from_file(cd, file, "./JSON_annotations/petrous_kushal.json", cd)
+coordinates = get_coordinates(petrous)
+centroid_dict = simpleCentroid(petrous, coordinates)
+
+cropper(cd, file, petrous, centroid_dict['x'], centroid_dict['y'], n)	
+
+assert_dimensions(file, n)
+# should print out an error, it's the image before cropping
+assert_dimensions(cropped_file, n)
+# should print out success, using the cropped image as input
+
+
+

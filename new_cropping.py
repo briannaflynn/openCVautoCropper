@@ -54,11 +54,13 @@ def get_coordinates(matrix):
 
 def simpleCentroid(matrix, start_end_coordinate_dict = None):
 	
-	def coordinates2centroid(coordinates):
+	def coordinates2centroid(start_end_coordinate_dict):
 		
 		coords = dict()
 		y = None
 		x = None
+		
+		coordinates = start_end_coordinate_dict
 		
 		if coordinates['end'][0] > coordinates['start'][0]:
 			y = coordinates['end'][0] - coordinates['start'][0]
@@ -84,9 +86,9 @@ def simpleCentroid(matrix, start_end_coordinate_dict = None):
 	
 	coords = None
 	start_end_positions = None	
-	if coordinates != None:
+	if start_end_coordinate_dict != None:
 		coords = coordinates2centroid(start_end_coordinate_dict)
-	elif coordinates == None:
+	elif start_end_coordinate_dict == None:
 		start_end_positions = get_coordinates(matrix)
 		coords = coordinates2centroid(start_end_positions)
 			

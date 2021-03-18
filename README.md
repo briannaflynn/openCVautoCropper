@@ -13,13 +13,13 @@ ________
 ## Example Input Image:
 
 ```Python
-from openCV_autoCropper import autoCropper
+from openCV_autoCropper import quadCropper
 
 # dictionary specifies the file, and the desired cropped outcome
 file_dictionary = {'myImg.jpg': 1, 'myImg.jpg': 2, 'myImg.jpg': 3, 'myImg.jpg': 4}
 
 
-autoCropper(image_dir, crop_dir, file_dictionary)
+quadCropper(image_dir, crop_dir, file_dictionary)
 
 ```
 (This is just one image)

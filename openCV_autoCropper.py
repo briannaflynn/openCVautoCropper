@@ -9,7 +9,7 @@ fdict = {"RSIP_Example_HipSegmentation.jpg" : 1}
 image_dir = "./image_dir"
 crop_dir = "./crop_dir"
 
-def autoCropper(image_dir, cropped_dir, file_dict):
+def quadCropper(image_dir, cropped_dir, file_dict):
 	
 	# get the full paths of the input and destination directories
 	full_path = os.path.abspath(image_dir)
@@ -58,5 +58,5 @@ def autoCropper(image_dir, cropped_dir, file_dict):
 			
 
 if __name__ == "__main__":
-	crop = autoCropper(image_dir, crop_dir, fdict)
+	crop = quadCropper(image_dir, crop_dir, fdict)
 

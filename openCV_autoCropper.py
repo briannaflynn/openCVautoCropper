@@ -6,6 +6,8 @@ import os
 
 ## file dictionary containing the names of the files in the image directory and the quadrant that you want to crop. Follows the convention top right = 1, top left = 2, bottom left = 3, bottom right = 4
 fdict = {"RSIP_Example_HipSegmentation.jpg" : 1}
+image_dir = "./image_dir"
+crop_dir = "./crop_dir"
 
 def autoCropper(image_dir, cropped_dir, file_dict):
 	
@@ -35,7 +37,7 @@ def autoCropper(image_dir, cropped_dir, file_dict):
 		# read in the full input path to open cv2
 		img = cv2.imread(fname)
 		
-		"""# if quadrant is specified as 1, do this type of cropping, and so on for all 4 quadrants
+		# if quadrant is specified as 1, do this type of cropping, and so on for all 4 quadrants
 		if v == 1:
 			crop_img = img[0:midy, midx:x]	
 			
@@ -46,7 +48,7 @@ def autoCropper(image_dir, cropped_dir, file_dict):
 			crop_img = img[midy:y, 0:midx]
 		
 		elif v == 4: 
-			crop_img = img[midy:y, midx:x]"""
+			crop_img = img[midy:y, midx:x]
 			
 		
 		# Write the cropped image to a new file, specified the name using the full destination directory path and "_cropped.jpg" as suffix
@@ -56,5 +58,5 @@ def autoCropper(image_dir, cropped_dir, file_dict):
 			
 
 if __name__ == "__main__":
-	crop = autoCropper("images_dir", "crop_dir", fdict)
+	crop = autoCropper(image_dir, crop_dir, fdict)
 

@@ -1,4 +1,5 @@
 #importing libraries
+import collections, functools, operator
 import cv2 as cv
 from PIL import Image
 import numpy as np
@@ -32,6 +33,9 @@ def mask_from_file(image_dir, filename, json_path, mask_dir, n=1):
     cv.imwrite(mask_dir + '/' + filename[:-4] + '_mask.png', polyMask)
     return polyMask
 
+# This finds the x and y coordinates of the start and end positions, used to find the centroid of the image
+# Returns a dictionary containing the start position, and the end position
+# To be used with simpleCentroid function
 
 def get_coordinates(matrix):
 	
@@ -48,10 +52,12 @@ def get_coordinates(matrix):
 			if matrix[i][j] == 1 and first_one == True:
 				coordinates['end'] = (i, j) # i = row, j = column
 			
+	start_end_coordinate_dict = coordinates
 	
-	return coordinates
+	return start_end_coordinate_dict
 
-
+# Find the x and y coordinates of the center of the polygon
+# Returns a dictionary that contains these coordinates
 def simpleCentroid(matrix, start_end_coordinate_dict = None):
 	
 	def coordinates2centroid(start_end_coordinate_dict):
@@ -94,20 +100,62 @@ def simpleCentroid(matrix, start_end_coordinate_dict = None):
 			
 	return coords
 		
+
+def n_finder(matrix, n = 1000, j = 200, k = 400):
+
+	indexer_dict_list = []
+	indexer_lengths = []
+	
+	for i in range(len(matrix)):
+		
+		indexer_dict = dict()
+		indexer_list = []
+		
+		for j in range(len(matrix[i])):
+			
+			if matrix[i][j] == 1:
+				indexer_dict[j] = 1
+				indexer_list.append(1)
+				
+		indexer_dict_list.append(indexer_dict)
+		indexer_lengths.append(len(indexer_list))
+		
+	
+	result = dict(functools.reduce(operator.add, map(collections.Counter, indexer_dict_list)))
+	vertical_index = max(result.items(), key=operator.itemgetter(1))[0]
+	
+	vertical_value = result[vertical_index]
+		
+	horizontal_value = max(indexer_lengths)
+		
+	maximum_value = max([vertical_value, horizontal_value])
+		
+	new_n = None
+	if maximum_value >= n:
+		new_n = maximum_value + j
+	elif maximum_value < n:
+		new_n = maximum_value + k
+				
+	return new_n
+
+
+
 	
 #given the filepath of an image (in .jpg) and its corresponding mask of ones and zeros,
 #this function crops and stores the image in the same directory
 #where n is half the length of the desired width and height
-def cropper(image_dir, filename, matrix, x, y, n, extension = ".jpg"):
+def cropper(image_dir, filename, matrix, n, extension = ".jpg"):
 
     path = os.path.abspath(image_dir + '/' + filename)
     img = cv.imread(path)
-
-    center_x, center_y = x, y
+    
+    coords = simpleCentroid(matrix)
+	
+    center_x, center_y = coords['x'], coords['y']
 
     left_bound = center_x - n // 2 if (center_x - n // 2) >= 0 else 0
-    right_bound = center_x + n //2 if (center_x + n) < len(matrix[0]) else (len(matrix[0]) - 1)
-    bottom_bound = center_y + n //2 if (center_y + n) < len(matrix) else len(matrix) - 1
+    right_bound = center_x + n // 2 if (center_x + n) < len(matrix[0]) else (len(matrix[0]) - 1)
+    bottom_bound = center_y + n // 2 if (center_y + n) < len(matrix) else len(matrix) - 1
     top_bound = center_y - n // 2 if (center_y - n) >= 0 else 0
 
     cropped_img = img[top_bound:bottom_bound, left_bound:right_bound]

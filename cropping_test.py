@@ -1,11 +1,11 @@
 #!/bin/python
-
+import collections, functools, operator
 from new_cropping import *
 from PIL import Image
 from tqdm import tqdm 
 import os
 
-def make_test(m, n, a, b):
+def make_test(m, n, a, b, color=1):
 	
 	x = [a, a, b, b]
 	y = [a, b, b, a]
@@ -13,7 +13,7 @@ def make_test(m, n, a, b):
 	contours = np.stack((x, y), axis = 1)
 	polygon = np.array([contours], dtype = np.int32)
 	zero_mask = np.zeros((m, n), np.uint8)
-	polyMask = cv.fillPoly(zero_mask, polygon, 255)
+	polyMask = cv.fillPoly(zero_mask, polygon, color)
 	
 	return polyMask
 	
@@ -41,18 +41,20 @@ def assert_dimensions(output_img, n):
 file = "S8840_Before_V1.jpg"
 cropped_file = file[:-4] + "_cropped.jpg"
 cd = "."
-n = 1200 
 
 petrous = mask_from_file(cd, file, "./JSON_annotations/petrous_kushal.json", cd)
-coordinates = get_coordinates(petrous)
-centroid_dict = simpleCentroid(petrous, coordinates)
 
-cropper(cd, file, petrous, centroid_dict['x'], centroid_dict['y'], n)	
+# find the desired dimensions for the cropped image size, default is 1000
+n = n_finder(petrous)
+
+cropper(cd, file, petrous, n)	
 
 assert_dimensions(file, n)
 # should print out an error, it's the image before cropping
 assert_dimensions(cropped_file, n)
 # should print out success, using the cropped image as input
+
+
 
 
 

@@ -35,7 +35,7 @@ def assert_dimensions(output_img, n):
 		
 	elif size_right == False:
 		print("Error: Output file", output_img, "has incorrect dimensions")
-		
+'''		
 # example demo
 
 file = "S8840_Before_V1.jpg"
@@ -54,7 +54,21 @@ assert_dimensions(file, n)
 assert_dimensions(cropped_file, n)
 # should print out success, using the cropped image as input
 
+'''
+
+matrix = make_test(600, 600, 300, 400)
+
+# get_coordinates_old(matrix)
 
 
+simpleCentroid(matrix)
 
+numpy_centroid(matrix)
 
+n_finder(matrix)
+# a = np.arange(3)
+# print(a)
+# b = np.arange(6).reshape(2,3)
+# print(b)
+# for x, y in np.nditer([a,b]):
+#     print("%d:%d" % (x,y), end=' ')

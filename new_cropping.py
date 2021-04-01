@@ -45,7 +45,6 @@ def mask_from_file(image_dir, filename, json_path, mask_dir, n=1):
 # This finds the x and y coordinates of the start and end positions, used to find the centroid of the image
 # Returns a dictionary containing the start position, and the end position
 # To be used with simpleCentroid function
-
 # @timeit
 def numpy_centroid(matrix):
 	

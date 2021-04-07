@@ -3,11 +3,19 @@
 import cv2
 from PIL import Image
 import os 
+import sys 
 
 ## file dictionary containing the names of the files in the image directory and the quadrant that you want to crop. Follows the convention top right = 1, top left = 2, bottom left = 3, bottom right = 4
-fdict = {"RSIP_Example_HipSegmentation.jpg" : 1}
-image_dir = "./image_dir"
-crop_dir = "./crop_dir"
+# fdict = {"S8138_Before_V1.jpg" : 'center'}
+image_dir = sys.argv[1]
+crop_dir = sys.argv[2]
+
+filedict = dict()
+flist = []
+for f in os.listdir(image_dir):
+	j = {f: sys.argv[3]}
+	flist.append(j)
+print(flist)
 
 def quadCropper(image_dir, cropped_dir, file_dict):
 	
@@ -50,6 +58,14 @@ def quadCropper(image_dir, cropped_dir, file_dict):
 		elif v == 4: 
 			crop_img = img[midy:y, midx:x]
 			
+		elif v == "center":
+			n = 2
+			mid_y_1 = midy - midy // n
+			mid_y_2 = midy + midy // n
+			mid_x_1 = midx - midx // n
+			mid_x_2 = midx + midx // n
+			crop_img = img[mid_y_1:mid_y_2, mid_x_1:mid_x_2]
+			
 		
 		# Write the cropped image to a new file, specified the name using the full destination directory path and "_cropped.jpg" as suffix
 		cv2.imwrite(cropped_fname, crop_img)
@@ -57,6 +73,5 @@ def quadCropper(image_dir, cropped_dir, file_dict):
 		return print(cropped_fname, "created successfully")
 			
 
-if __name__ == "__main__":
-	crop = quadCropper(image_dir, crop_dir, fdict)
-
+for l in flist:
+	quadCropper(image_dir, crop_dir, l)
